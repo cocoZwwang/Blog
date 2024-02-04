@@ -1,4 +1,0 @@
-math:
-  enable: true
-  per_page: false
-  engine: mathjax

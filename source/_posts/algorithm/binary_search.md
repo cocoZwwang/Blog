@@ -2,7 +2,6 @@
 title: 二分
 date: 2024-02-04 22:38:26
 categories: 算法
-mathjax: true
 ---
 ## 查找值
 

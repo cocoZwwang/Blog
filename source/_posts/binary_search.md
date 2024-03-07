@@ -2,10 +2,14 @@
 title: 二分
 date: 2024-02-04 22:38:26
 categories: 算法
+mathjax: true
+thumbnail:
 ---
 ## 查找值
 
 这是二分搜索最简单的用法，在**有序**的数组中查找某个值是否存在或者最接近某个值的值。
+
+<!--more-->
 
 C++ STL 实现了二分查找值的算法，可以直接使用
 ```c++
@@ -218,15 +222,7 @@ void solve(){
 **例题：**[leetcode 668. 乘法表中第k小的数](https://leetcode.cn/problems/kth-smallest-number-in-multiplication-table/)
     几乎每一个人都用 乘法表。但是你能在乘法表中快速找到第 k 小的数字吗？乘法表是大小为 m x n 的一个整数矩阵，其中 mat[i][j] == i * j（下标从 1 开始）。给你三个整数 m、n 和 k，请你在大小为 m x n 的乘法表中，找出并返回第 k 小的数字。
 
-**参考思路：**就是使用上面的判断方法来进行二分，关键是计数,这里很简单，因为
-$$
-mat[i][j]=i \times j
-$$
-因此每一行小于等于 x 的个数就是 
-$$
-min(n,x/i)
-$$
-m x n 的矩阵可以在 O(m) 的时间复杂度内进行每次的计数。
+**参考思路：**就是使用上面的判断方法来进行二分，关键是计数,由于$mat[i][j]=i \times j$，因此$i \times j \leq x$，可知每一行小于等于 x 的个数为$\min(n,x/i)$。
 
 ```c++
 class Solution {

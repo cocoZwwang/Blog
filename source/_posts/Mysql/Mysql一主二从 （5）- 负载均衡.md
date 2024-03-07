@@ -4,6 +4,7 @@ date: 2024-03-07 15:08:59
 tags:
 categories: Mysql
 thumbnail:
+toc: true
 ---
 
 - LVS 简介
@@ -11,15 +12,15 @@ thumbnail:
 
 <!--more-->
 
-## LVS 简介
+# LVS 简介
 
 如果想了解 LVS/DR 的工作原理可以参考文章：《01 LVS-简介》
 
 如果想了解如何基于 Keepalived 部署一个最小化的标准 LVS/DR 负载均衡集群，可以参考文章：《02 LVS 负载均衡器搭建》，《03 Keepalived + LVS-DR 高可用负载均衡器搭建》
 
-## 部署 Keepalived + LVS/DR 的主备负载均衡集群
+# 部署 Keepalived + LVS/DR 的主备负载均衡集群
 
-### 部署图
+## 部署图
 
 ![图 1](1_master_2_slave_deploy.png)
 
@@ -27,9 +28,9 @@ thumbnail:
 
 - LVS 备用节点存在 IPVS 规则时会产生流量转发的死循环问题。
 
-### 流量转移死循环问题
+## 流量转移死循环问题
 
-#### 为什么会产生流量转发的死循环？
+### 为什么会产生流量转发的死循环？
 
 我们可以假设这么一种情景：存在两台互为主备的 LVS-DR 节点，并且它们同时也是 Real Server。
 
@@ -44,22 +45,23 @@ thumbnail:
 
 在当前场景中，我是通过 Keepalived 来实现 LVS 的高可用，而 Keepalived 不管主/备都会生成 IPVS 规则，这有利于快速进行故障转移，但是也会造成上述的死循环问题。
 
-#### 解决死循环问题
+### 解决死循环问题
 
 容易想到的两个思路是：
 
 - LVS Backup 节点上不加载 IPVS 规则，只有转为主节点时才加载 IPVS 规则。
 - 想办法识别 LVS Master 转发过的流量，并让 LVS 不处理这种流量。
 
-##### 动态加载 IPVS 规则
+#### **动态加载 IPVS 规则**
 
-由于 Keepalived 主备状态都默认生成 IPVS 规则，因此需要借助通知脚本来实现该功能，Keepalived 的配置文件中有三个参数：
+先来了解三个 keepalived 的配置参数：
+|参数|作用|
+|----|----|
+|notify_master|当前节点切换为主节点时，执行指定的脚本|
+|notify_backup|当前节点切换为备节点时，执行指定的脚本|
+|notify_fault|当前节点切换为故障状态时，执行指定的脚本|
 
--  notify_master：当前节点切换为主节点时，执行指定的脚本
--  notify_backup ：当前节点切换为备节点时，执行指定的脚本
--  notify_fault：当前节点切换为故障状态时，执行指定的脚本
-
-因此：
+因此可以借助通知脚本来实现该功能：
 
 - 指定 notify_master 执行脚本，并通过其加载 IPVS 规则。
 - 指定 notify_backup 和 notify_fault，并通过其清空当前 IPVS 规则。
@@ -69,65 +71,57 @@ thumbnail:
 - 动态加载 IPVS 规则增加了主备切换的时间成本。
 - 虽然 Keepalived 内置了对 LVS 的支持，但是 LVS 本身和 Keepalived 并不是一个组件，因此如果 Keepalived Master 被意外杀死而没有调用通知脚本，此时当 Keepalived Backup 转为 Master 状态时，就会再次出现死循环问题。
 
-##### 使用 iptables + lvs fwmark
+#### **使用 iptables + lvs fwmark**
 
 lvs fwmark 功能可以对被 iptables 标记的流量进行识别，因此假如我们有两个 LVS 节点  node1 和 node2：
 
-- 在 node1 上配置 iptable 规则
+在 node1 上配置 iptable 规则：
 
-  ```shell
-  iptables -t mangle -I PREROUTING -d $VIP -p tcp --dport $VPORT -m mac ! --mac-source $MAC_NODE2 -j MARK --set-mark 0x1
-  ```
+```shell
+# 如果请求 VIP:Port 的流量的源 MAC 地址不等于 node2 MAC 地址，则表明该流量为客户端请求流量，并将其 mark 值设置为 1。
+iptables -t mangle -I PREROUTING -d $VIP -p tcp --dport $VPORT -m mac ! --mac-source $MAC_NODE2 -j MARK --set-mark 0x1
+```
 
-  如果请求 VIP:Port 的流量的源 MAC 地址不等于 node2 MAC 地址，则表明该流量为客户端请求流量，并将其 mark 值设置为 1。
+在 node2 配置 iptable 规则
+```shell
+# 如果请求 VIP:Port 的流量的源 MAC 地址不等于 node1 MAC 地址，则表明该流量为客户端请求流量，并将其 mark 值设置为 1。
+iptables -t mangle -I PREROUTING -d $VIP -p tcp --dport $VPORT -m mac ! --mac-source $MAC_NODE1 -j MARK --set-mark 0x1
+```
+keepalived 上配置 lvs fwmark：  
 
-- 在 node2 配置 iptable 规则
-
-  ```shell
-  iptables -t mangle -I PREROUTING -d $VIP -p tcp --dport $VPORT -m mac ! --mac-source $MAC_NODE1 -j MARK --set-mark 0x1
-  ```
-
-  如果请求 VIP:Port 的流量的源 MAC 地址不等于 node1 MAC 地址，则表明该流量为客户端请求流量，并将其 mark 值设置为 1。
-
-- keepalived 上配置 lvs fwmark：  
-
-  ```shell
-  virtual_server fwmark 1 {
-       delay_loop 10
-       lb_algo rr
-        lb_kind DR
-       ....
-  }
-  ```
+```shell
+virtual_server fwmark 1 {
+     delay_loop 10
+     lb_algo rr
+      lb_kind DR
+     ....
+}
+```
 
 这种方式需要利用 iptables 规则，但是可以允许主/备 LVS 同时存在 IPVS 规则，这里我也是选择了这种解决方案。
 
-### Real Server 配置
+## Real Server 配置
 
 > 三台节点都需要同样的配置
 
-设置隐藏 VIP: 192.168.3.100
 
-```shell
+{% codeblock "设置隐藏 VIP: 192.168.3.100" lang:shell >folded %}
 # 设置 vip 到 lo 网口
 ip addr add 192.168.3.100/32 broadcast 192.168.3.100 dev lo
 ip route add 192.168.3.100/32 via 192.168.3.100 dev lo
 # 防止 lo 上地址被其他网口通过 arp 广播暴露出去
 echo 1 > /proc/sys/net/ipv4/conf/all/arp_ignore
 echo 2 > /proc/sys/net/ipv4/conf/all/arp_announce
-```
+{% endcodeblock %}
 
-### LVS 主节点配置（node2）
+## LVS 主节点配置（node2）
 
-安装 keepalived 
 
-```shell
+{% codeblock "1. 安装 keepalived " lang:shell >folded %}
 yum install -y keepalived
-```
+{% endcodeblock %}
 
-配置 `/etc/keepalived/keepalived.conf`：
-
-```shell
+{% codeblock "2. 配置 /etc/keepalived/keepalived.conf" lang:cnf >folded %}
 global_defs {
    notification_email {
     	xxxxx@163.com
@@ -200,12 +194,10 @@ virtual_server fwmark 1 {
         }
     }
 }
-```
+{% endcodeblock %}
 
-设置 iptalbes 规则：
-
-```shell
-# ping 一下 RIP2
+{% codeblock "3. 设置 iptalbes 规则：" lang:shell >folded %}
+# ping 一下 RIP3
 ping 192.168.3.133
 
 # 获取 node3 的 mac 地址
@@ -218,19 +210,17 @@ node3 (192.168.3.133) at 00:0c:29:e9:27:55 [ether] on ens33
 Chain PREROUTING (policy ACCEPT)
 target     prot opt source               destination
 MARK       tcp  --  0.0.0.0/0            192.168.3.10         tcp dpt:3306 MAC ! 00:0C:29:E9:27:55 MARK set 0x1
-```
+{% endcodeblock %}
 
-### LVS 备节点配置（node3）
+## LVS 备节点配置（node3）
 
-安装 keepalived 
 
-```shell
+{% codeblock "1. 安装 keepalived " lang:shell >folded %}
 yum install -y keepalived
-```
+{% endcodeblock %}
 
-配置 `/etc/keepalived/keepalived.conf`：
 
-```shell
+{% codeblock "2. 配置 /etc/keepalived/keepalived.conf" lang:shell >folded %}
 global_defs {
    notification_email {
     	xxxxx@163.com
@@ -303,11 +293,10 @@ virtual_server fwmark 1 {
         }
     }
 }
-```
+{% endcodeblock %}
 
-设置 iptalbes 规则：
 
-```shell
+{% codeblock "3. 设置 iptalbes 规则：" lang:shell >folded %}
 # ping 一下 RIP2
 ping 192.168.3.132
 
@@ -321,19 +310,16 @@ node2 (192.168.3.132) at 00:0c:29:3b:63:ce [ether] on ens33
 Chain PREROUTING (policy ACCEPT)
 target     prot opt source               destination
 MARK       tcp  --  0.0.0.0/0            192.168.3.10         tcp dpt:3306 MAC ! 00:0C:29:3B:63:CE MARK set 0x1
-```
+{% endcodeblock %}
 
-### 验证
+## 验证
 
-启动 keepalived
 
-```shell
+{% codeblock "1. 启动 keepalived" lang:shell >folded %}
 [root@node2 ~]# systemctl start keepalived; ssh node3 'systemctl start keepalived'
-```
+{% endcodeblock %}
 
-通过远程主机访问 VIP:3306
-
-```cmd
+{% codeblock "2. 通过远程主机访问 VIP:3306" lang:cmd >folded %}
 D:\Works\mysql-8.0.15-winx64\bin>mysql -umhauser -pmhapass -h 192.168.3.10 -e "show variables like 'server_id';"
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
@@ -357,11 +343,10 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
 | server_id     | 1     |
 +---------------+-------+
-```
+{% endcodeblock %}
 
-关闭 node2 上的 keepalived
 
-```shell
+{% codeblock "3. 关闭 node2 上的 keepalived" lang:shell >folded %}
 [root@node2 ~]# systemctl stop keepalived
 [root@node2 ~]# ip addr list ens33
 # VIP 已经发送转移
@@ -372,11 +357,10 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
     inet6 fe80::74a3:7d4f:d23c:4b03/64 scope link noprefixroute
        valid_lft forever preferred_lft forever
 
-```
+{% endcodeblock %}
 
-查看 node3 上的 vip：
 
-```shell
+{% codeblock "4. 查看 node3 上的 vip：" lang:shell >folded %}
 [root@node3 ~]# ip addr list ens33
 # VIP 已经别 node3 持有
 2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
@@ -387,11 +371,10 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
        valid_lft forever preferred_lft forever
     inet6 fe80::811d:2f59:9e85:f5c4/64 scope link noprefixroute
        valid_lft forever preferred_lft forever
-```
+{% endcodeblock %}
 
-通过远程主机访问 VIP:3306
 
-```cmd
+{% codeblock "5. 通过远程主机访问 VIP:3306" lang:cmd >folded %}
 D:\Works\mysql-8.0.15-winx64\bin>mysql -umhauser -pmhapass -h 192.168.3.10 -e "show variables like 'server_id';"
 mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
@@ -415,6 +398,6 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
 | server_id     | 1     |
 +---------------+-------+
-```
+{% endcodeblock %}
 
 

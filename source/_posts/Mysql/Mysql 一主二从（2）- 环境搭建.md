@@ -35,10 +35,9 @@ toc: true
 
 在 node1 上创建脚本  `~/bin/ssh_rsa_gen`：
 
-> 注意： 需要添加 ~/bin 路径当前环境变量；需要添加 ssh_rsa_gen 的执行权限。
-
-```
+```shell
 #!/bin/bash
+# 注意： 需要添加 ~/bin 路径当前环境变量；需要添加 ssh_rsa_gen 的执行权限。
 nodes=("node1" "node2" "node3")
 ssh_user=root
 local_node=`hostname`
@@ -58,9 +57,9 @@ do
 done
 ```
 
-在 node1 上执行脚本，脚本执行过程中会被多次要求输入密码
+在 node1 上执行脚本，脚本执行过程中会被多次要求输入密码：
 
-```shell
+{% codeblock "demo" lang:shell >folded %}
 [root@node3 ~]# ssh_rsa_gen
 Generating public/private rsa key pair.
 Created directory '/root/.ssh'.
@@ -106,20 +105,20 @@ Warning: Permanently added 'node3,192.168.3.133' (ECDSA) to the list of known ho
 root@node3's password:
 id_rsa.pub                                                                                                                                 100%  392   485.1KB/s   00:00
 root@node3's password:
-```
+{% endcodeblock %}
 
-把脚本复制到其他节点，此时 scp 命令已经不需要输入密码
+把脚本复制到其他节点，此时 scp 命令已经不需要输入密码：
 
-```shell
+{% codeblock "demo" lang:shell >folded %}
 [root@localhost ~]# scp ~/bin/ssh_rsa_gen node2:~/bin/
 ssh_rsa_gen                                   100%  451   234.8KB/s   00:00
 [root@localhost ~]# scp ~/bin/ssh_rsa_gen node3:~/bin/
 ssh_rsa_gen                                   100%  451   272.8KB/s   00:00
-```
+{% endcodeblock %}
 
 远程登录其他节点并执行脚本：
 
-```shell
+{% codeblock "demo" lang:shell >folded %}
 [root@localhost ~]# ssh node2
 Last login: Wed Feb 28 22:59:26 2024 from node1
 [root@node2 ~]# ssh_rsa_gen
@@ -135,4 +134,4 @@ Last login: Wed Feb 28 22:44:57 2024 from node1
 [root@node3 ~]# exit
 登出
 Connection to node3 closed.
-```
+{% endcodeblock %}

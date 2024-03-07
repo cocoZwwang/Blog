@@ -80,7 +80,7 @@ gtid_executed_compression_period=1000
 
 重启 MYSQL 实例 `systemctl restart mysql`，检测 MYSQL 参数：
 
-```shell
+{% codeblock "demo" lang:shell >folded %}
 root@localhost (none) :45: >select @@server_id;
 +-------------+
 | @@server_id |
@@ -114,7 +114,7 @@ root@localhost (none) :47: >show variables like '%gtid%';
 9 rows in set (0.02 sec)
 
 root@localhost (none) :47: >
-```
+{% endcodeblock %}
 
 ### 使用增强半同步模式
 
@@ -234,7 +234,8 @@ mysql> start slave;
 
 使用 show processlist 命令查看复制连接状态信息：
 
-```sql
+
+{% codeblock "demo" lang:sql >folded %}
 mysql> show slave status\G
 *************************** 1. row ***************************
                Slave_IO_State: Waiting for source to send event
@@ -243,11 +244,11 @@ mysql> show slave status\G
       Slave_SQL_Running_State: Replica has read all relay log; waiting for more updates
 1 row in set, 1 warning (0.01 sec)
 # 以上只显示了部分信息
-```
+{% endcodeblock %}
 
 在每个从节点上查看复制账号是否同步过来了，如果同步过来则表示同步配置成功
 
-```shell
+{% codeblock "demo" lang:shell >folded %}
 root@localhost (none) :06: >select user from mysql.user;
 +------------------+
 | user             |
@@ -259,7 +260,7 @@ root@localhost (none) :06: >select user from mysql.user;
 | root             |
 +------------------+
 5 rows in set (0.00 sec)
-```
+{% endcodeblock %}
 
 ### 设置 Master 为可写状态
 

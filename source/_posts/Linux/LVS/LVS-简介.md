@@ -1,7 +1,7 @@
 ---
 title: LVS-简介
 toc: true
-date: 2024-03-08 11:43:19
+date: 2024-03-03 11:43:19
 tags: 
 - Linux
 - LVS
@@ -214,4 +214,5 @@ UDP  192.168.3.2:5000 wlc
 # 参考资料
 
 [LVS 官方文档](http://www.linuxvirtualserver.org/Documents.html)
+
 [LVS-HOWTO](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/index.html)

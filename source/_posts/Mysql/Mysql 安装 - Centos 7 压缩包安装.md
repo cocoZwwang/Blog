@@ -1,7 +1,7 @@
 ---
 title: Mysql 安装 - Centos 7 二进制包安装
 toc: true
-date: 2024-03-08 09:28:24
+date: 2024-03-01 09:28:24
 tags: Mysql
 categories:
 thumbnail:

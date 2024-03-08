@@ -1,7 +1,7 @@
 ---
 title: VMWare Player 安装Centos 7
 toc: true
-date: 2024-03-08 10:53:23
+date: 2024-02-27 10:53:23
 tags:
 categories:
 thumbnail:

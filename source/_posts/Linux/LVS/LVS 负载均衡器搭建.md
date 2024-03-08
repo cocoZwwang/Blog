@@ -1,7 +1,7 @@
 ---
 title: LVS 负载均衡器搭建
 toc: true
-date: 2024-03-08 11:43:29
+date: 2024-03-04 11:43:29
 tags:
 - Linux
 - LVS
@@ -331,4 +331,5 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 # 参考资料
 
 [LVS 官方文档](http://www.linuxvirtualserver.org/Documents.html)
+
 [LVS-HOWTO](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/index.html)

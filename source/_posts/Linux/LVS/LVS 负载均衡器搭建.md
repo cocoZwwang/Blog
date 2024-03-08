@@ -6,7 +6,7 @@ tags:
 - Linux
 - LVS
 - Load Balancer
-categories:
+categories: Linux
 thumbnail:
 ---
 本文将通过虚拟机环境，描述如果一步步搭建一个简单标准的 LVS 负载均衡器，包括 LVS-DR 和 LVS-NAT 两种网络模型。

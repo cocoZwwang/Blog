@@ -3,7 +3,9 @@ title: VMWare Player 安装Centos 7
 toc: true
 date: 2024-02-27 10:53:23
 tags:
-categories:
+- VMware
+- CentOS
+categories: Linux
 thumbnail:
 ---
 

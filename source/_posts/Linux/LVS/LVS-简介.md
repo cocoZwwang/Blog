@@ -6,7 +6,7 @@ tags:
 - Linux
 - LVS
 - Load Balancer
-categories:
+categories: Linux
 thumbnail:
 ---
 

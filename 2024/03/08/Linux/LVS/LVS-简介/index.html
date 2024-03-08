@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>LVS-简介 - Hexo</title><link rel="manifest" href="/blog/manifest.json"><meta name="theme-color" content="#f7f7f7"><meta name="application-name" content="Icaurs - Hexo Theme"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="msapplication-TileColor" content="#f7f7f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Icaurs - Hexo Theme"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="LVS（Linux Virtual Server）是建立在真实服务器集群基础上的高可扩展性和高可用性虚拟服务器，整个真实服务集群系统对终端用户而言就好像只是一台高性能的虚拟服务器。 LVS 可用于构建 Linux 高性能的负载均衡服务器集群，使集群的并行服务以虚拟服务的形式出现在单个 IP 地址上，请求分派使用 IP 负载平衡技术。系统的可扩展性是通过在集群中透明地添加或删除节点来实现的。通过检测"><meta property="og:type" content="blog"><meta property="og:title" content="LVS-简介"><meta property="og:url" content="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="LVS（Linux Virtual Server）是建立在真实服务器集群基础上的高可扩展性和高可用性虚拟服务器，整个真实服务集群系统对终端用户而言就好像只是一台高性能的虚拟服务器。 LVS 可用于构建 Linux 高性能的负载均衡服务器集群，使集群的并行服务以虚拟服务的形式出现在单个 IP 地址上，请求分派使用 IP 负载平衡技术。系统的可扩展性是通过在集群中透明地添加或删除节点来实现的。通过检测"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_nat.png"><meta property="og:image" content="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_dr.png"><meta property="article:published_time" content="2024-03-08T03:43:19.000Z"><meta property="article:modified_time" content="2024-03-08T15:31:09.611Z"><meta property="article:author" content="cocoZWWang"><meta property="article:tag" content="Linux"><meta property="article:tag" content="LVS"><meta property="article:tag" content="Load Balancer"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_nat.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/"},"headline":"LVS-简介","image":["https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_nat.png","https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_dr.png"],"datePublished":"2024-03-08T03:43:19.000Z","dateModified":"2024-03-08T15:31:09.611Z","author":{"@type":"Person","name":"cocoZWWang"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"https://cocozwwang.github.io/img/logo.svg"}},"description":"LVS（Linux Virtual Server）是建立在真实服务器集群基础上的高可扩展性和高可用性虚拟服务器，整个真实服务集群系统对终端用户而言就好像只是一台高性能的虚拟服务器。 LVS 可用于构建 Linux 高性能的负载均衡服务器集群，使集群的并行服务以虚拟服务的形式出现在单个 IP 地址上，请求分派使用 IP 负载平衡技术。系统的可扩展性是通过在集群中透明地添加或删除节点来实现的。通过检测"}</script><link rel="canonical" href="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/"><link rel="icon" href="/blog/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/blog/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><script src="https://www.googletagmanager.com/gtag/js?id=UA-72437521-5" async></script><script>window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+    
+        gtag('config', 'UA-72437521-5');</script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.css"><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.1.1"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/blog/"><img src="/blog/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/blog/">Home</a><a class="navbar-item" href="/blog/archives">Archives</a><a class="navbar-item" href="/blog/categories">Categories</a><a class="navbar-item" href="/blog/tags">Tags</a><a class="navbar-item" href="/blog/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Discuss on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus/discussions"><i class="fas fa-comments"></i></a><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-6-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2024-03-08T03:43:19.000Z" title="2024/3/8 11:43:19">2024-03-08</time>发表</span><span class="level-item">12 分钟读完 (大约1767个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">LVS-简介</h1><div class="content"><p>LVS（Linux Virtual Server）是建立在真实服务器集群基础上的高可扩展性和高可用性虚拟服务器，整个真实服务集群系统对终端用户而言就好像只是一台高性能的虚拟服务器。</p>
+<p>LVS 可用于构建 Linux 高性能的负载均衡服务器集群，使集群的并行服务以虚拟服务的形式出现在单个 IP 地址上，请求分派使用 IP 负载平衡技术。系统的可扩展性是通过在集群中透明地添加或删除节点来实现的。通过检测节点或守护进程故障并适当地重新配置系统，可提供高可用性。</p>
+<span id="more"></span>
+
+<h1 id="关键词"><a href="#关键词" class="headerlink" title="关键词"></a>关键词</h1><ul>
+<li>Director Server：负载均衡节点</li>
+<li>RealServer：处理请求的真实服务节点</li>
+<li>VIP：Virtule IP，主要用于外网通信</li>
+<li>DIP：Director IP，主要用于内网通信</li>
+<li>RIP：Real IP，RealServer 的 IP 地址</li>
+<li>CIP：Client IP，外网客户端 IP</li>
+</ul>
+<h1 id="LVS-工作模式"><a href="#LVS-工作模式" class="headerlink" title="LVS 工作模式"></a>LVS 工作模式</h1><ul>
+<li>LVS-NAT</li>
+<li>LVS-DR(direct routint)</li>
+<li>LVS-TUN(ip tunnelling)</li>
+<li>LVS-FULLNET</li>
+</ul>
+<h2 id="LVS-NAT"><a href="#LVS-NAT" class="headerlink" title="LVS-NAT"></a>LVS-NAT</h2><p>通过 NAT 虚拟服务器的优点是，真实服务器可以运行任何支持 TCP&#x2F;IP 协议的操作系统，真实服务器可以使用专用互联网地址，负载平衡器只需要一个 IP 地址。</p>
+<p>缺点是通过 NAT 虚拟服务器的可扩展性有限。当服务器节点（一般 PC 服务器）增加到 20 个左右或更多时，负载平衡器可能会成为整个系统的瓶颈，因为请求数据包和响应数据包都需要由负载平衡器重写。</p>
+<p><strong>LVS-NAT 一些需要注意的点</strong></p>
+<ul>
+<li>RIP 应该和 DIP 应该使用私网地址。</li>
+<li>RIP 和 DIP必须在同一IP网络，且 Real Server 的网关需要指向 DIP。</li>
+<li>请求和响应报文都要经由 director 转发，极高负载的场景中，director 可能会成为系统瓶颈。</li>
+<li>支持端口映射，VIP 和 RIP 不需要监听在同一端口。</li>
+<li>Real Server 可以使用任意OS。</li>
+</ul>
+<p><img src="/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_nat.png" alt="lvs-nat"></p>
+<ol>
+<li>客户端请求（src：CIP，dest：VIP:80）</li>
+<li>LVS 调度和重写数据包并将数据包通过 DIP 发送到 Real Server（src：CIP，dest：RIP1:80）</li>
+<li>Real Server1 接受并处理请求</li>
+<li>Real Server1 回复 DIP（src：RIP1:80，dest：CIP）</li>
+<li>DIP 接受数据后将数据包的源地址和端口修改为 VIP:80 并转发到 VIP （src：VIP:80，des：CIP）</li>
+<li>VIP 将数据返回到 CIP（src：VIP:80，des：CIP）</li>
+</ol>
+<h2 id="LVS-DR"><a href="#LVS-DR" class="headerlink" title="LVS-DR"></a>LVS-DR</h2><p>DR 模式相对于 NAT 来说有着更好的负载能力，因为它只需要处理连接的请求数据，而回复则由真实服务器直接返回给客户端。</p>
+<p><strong>DR 模式对网络拓扑有以下要求：</strong></p>
+<ul>
+<li>DR 模式是通过修改 MAC 地址来进行直接转发，因此 Director Server 和 Real Server 必须有一个接口通过 <code>HUB/交换机</code>进行物理连接。</li>
+<li>Diretor Server 和 Real Server 都同时拥有 VIP，前者使用 VIP 接受请求，后者则需要使用 VIP 进行回复。</li>
+<li>Diretor Server 的 VIP 必须暴露给路由器，而 Real Server 的 RIP 则必须被隐藏，否则将会出现 IP 冲突。</li>
+<li>Director Server 和 Real Server 至少存在一个物理网口连接在同一个集线器&#x2F;交互机上。</li>
+</ul>
+<p>下面是一个简单<code>LVS-DR</code>负载均衡的网络模型：<br><img src="/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/lvs_dr.png" alt="lvs-dr: vip/rip 在同一个网段"></p>
+<ol>
+<li>客户端向 VIP:Port 发送请求报文。</li>
+<li>由于只有 Direcotr 的 VIP 暴露给了路由，因此路由将请求报文的目标 MAC 指向了 Director。</li>
+<li>交互机将请求报文转发给 Director。</li>
+<li>Directory 接受请求报文，IPVS 会在 netfilter 中进行拦截，发现和 IPVS 规则匹配，因此根据调度算法选择一台 Real Server 进行转发：将请求报文的目标 MAC 修改为该 Real Server 的MAC，并重新转发给交换机。</li>
+<li>交换机将请求报文转发给 Real Server。</li>
+<li>Real Server 接受并解析请求报文，发现目标地址为 VIP，因此转发给 lo:0 进行处理，并使用 VIP 作为源地址对客户端直接进行回复。</li>
+<li>交换机将回复报文转发给路由器</li>
+<li>路由器将回复报文转发给客户端。</li>
+</ol>
+<blockquote>
+<p>上面网络拓扑 Real Server 可以直接回复 Client 是因为 VIP 和 RIP 同处一个网段，并且 RIP 的网关指向了图中的路由器。 </p>
+</blockquote>
+<h1 id="LVS-组件"><a href="#LVS-组件" class="headerlink" title="LVS 组件"></a>LVS 组件</h1><h2 id="ipvs"><a href="#ipvs" class="headerlink" title="ipvs"></a>ipvs</h2><p>ipvs 工作在 Linux 内核中的 netfilter INPUT 钩子上，支持 TCP，UPD，AH，EST，AH_EST，SCTP 等诸多协议。</p>
+<ul>
+<li>一个 ipvs 主机可以同时定义多个 cluster service</li>
+<li>一个 cluster service 上至少有一个 real service</li>
+<li>定义时可以指明 lvs-type，缺省为 dr</li>
+<li>定义时可以指明lvs scheduler，缺省为 wlc<ul>
+<li>rr：轮询</li>
+<li>wrr：加权轮询</li>
+<li>lc：最少连接</li>
+<li>wlc：加权最少连接</li>
+<li>lblc：基于局部性的最少链接调度</li>
+<li>lblcr：带复制的基于局部性最少链接调度</li>
+<li>dh：目标地址散列调度</li>
+<li>sh：源地址散列调度</li>
+</ul>
+</li>
+</ul>
+<h2 id="ipvsadm"><a href="#ipvsadm" class="headerlink" title="ipvsadm"></a>ipvsadm</h2><p>ipvsadm 是一个用户空间的命令行工具，用于管理集群服务。</p>
+<h3 id="管理-Director-Server"><a href="#管理-Director-Server" class="headerlink" title="管理 Director Server"></a>管理 Director Server</h3><p>添加一个 Director Server</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ipvsadm 添加 tcp 192.168.3.10:80 调度算法 轮询</span></span><br><span class="line">ipvsadm   -A   -t  192.168.3.10:80 -s       rr</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ipvsadm 添加 udp 192.168.3.2:5000 调度算法 加权最少连接数</span></span><br><span class="line">ipvsadm   -A   -u  192.168.3.2:5000 -s       wlc</span><br></pre></td></tr></table></figure>
+
+<p>修改一个 Director Server</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ipvsadm 修改 tcp 192.168.3.10:80 调度算法 加权轮询</span></span><br><span class="line">ipvsadm   -E   -t  192.168.3.10:80 -s       wrr</span><br></pre></td></tr></table></figure>
+
+<p>删除一个 Director Server</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ipvsadm -D -t 192.168.3.100:80</span><br></pre></td></tr></table></figure>
+
+<h3 id="管理-Real-Server："><a href="#管理-Real-Server：" class="headerlink" title="管理 Real Server："></a>管理 Real Server：</h3><p>添加一个 Real Server </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ipvsadm  添加  tcp  director server    real server           dr  权重   1</span></span><br><span class="line">ipvsadm    -a    -t   192.168.3.10:80   -r 192.168.3.101:8080  -g  -w     1</span><br><span class="line">ipvsadm    -a    -t   192.168.3.10:80   -r 192.168.3.102:80    -g  -w     1</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ipvsadm  添加  udp  director server    real server            nat  权重   2</span></span><br><span class="line">ipvsadm    -a    -u   192.168.3.2:5000   -r 192.168.3.103:5000  -m   -w     2</span><br><span class="line">ipvsadm    -a    -u   192.168.3.2:5000   -r 192.168.3.104:5001  -m   -w     1</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看和清空"><a href="#查看和清空" class="headerlink" title="查看和清空"></a>查看和清空</h3><p>查看 ipvs 规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-L：列出所有 ipvs 规则</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-n：地址和端口通过数字显示</span></span><br><span class="line">[root@node4 ~]# ipvsadm -L -n</span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  192.168.3.10:80 wrr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.101:80             Route   1      0          0</span></span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.102:80             Route   1      0          0</span></span><br><span class="line">UDP  192.168.3.2:5000 wlc</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.103:5000           Masq    2      0          0</span></span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.104:5001           Masq    1      0          0</span></span><br></pre></td></tr></table></figure>
+
+<p>清空 ipvs 规则</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ipvsadm -C</span><br></pre></td></tr></table></figure>
+
+<h3 id="保存和恢复"><a href="#保存和恢复" class="headerlink" title="保存和恢复"></a>保存和恢复</h3><p>保存 ipvs 规则到指定文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@node4 ~]# ipvsadm-save -n &gt; /etc/sysconfig/ipvsadm-config</span><br><span class="line">[root@node4 ~]# cat /etc/sysconfig/ipvsadm-config</span><br><span class="line">-A -t 192.168.3.10:80 -s wrr</span><br><span class="line">-a -t 192.168.3.10:80 -r 192.168.3.101:80 -g -w 1</span><br><span class="line">-a -t 192.168.3.10:80 -r 192.168.3.102:80 -g -w 1</span><br><span class="line">-A -u 192.168.3.2:5000 -s wlc</span><br><span class="line">-a -u 192.168.3.2:5000 -r 192.168.3.103:5000 -m -w 2</span><br><span class="line">-a -u 192.168.3.2:5000 -r 192.168.3.104:5001 -m -w 1</span><br></pre></td></tr></table></figure>
+
+<p>恢复 ipvs 规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">清空 ipvs 规则</span></span><br><span class="line">[root@node4 ~]# ipvsadm -C</span><br><span class="line">[root@node4 ~]# ipvsadm -L -n</span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">[root@node4 ~]#</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">恢复 ipvs 规则</span></span><br><span class="line">[root@node4 ~]# ipvsadm-restore &lt; /etc/sysconfig/ipvsadm-config</span><br><span class="line">[root@node4 ~]# ipvsadm -L -n</span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  192.168.3.10:80 wrr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.101:80             Route   1      0          0</span></span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.102:80             Route   1      0          0</span></span><br><span class="line">UDP  192.168.3.2:5000 wlc</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.103:5000           Masq    2      0          0</span></span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.3.104:5001           Masq    1      0          0</span></span><br></pre></td></tr></table></figure>
+
+
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="http://www.linuxvirtualserver.org/Documents.html">LVS 官方文档</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/index.html">LVS-HOWTO</a></p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>LVS-简介</p><p><a href="https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-简介/">https://cocozwwang.github.io/blog/2024/03/08/Linux/LVS/LVS-简介/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>作者</h6><p>cocoZWWang</p></div></div><div class="level-item is-narrow"><div><h6>发布于</h6><p>2024-03-08</p></div></div><div class="level-item is-narrow"><div><h6>更新于</h6><p>2024-03-08</p></div></div><div class="level-item is-narrow"><div><h6>许可协议</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="" rel="noopener" target="_blank" title="CC BY-NC-SA 4.0" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/blog/tags/Linux/">Linux</a><a class="link-muted mr-2" rel="tag" href="/blog/tags/LVS/">LVS</a><a class="link-muted mr-2" rel="tag" href="/blog/tags/Load-Balancer/">Load Balancer</a></div><div class="sharethis-inline-share-buttons"></div><script src="//platform-api.sharethis.com/js/sharethis.js#property=5ab6f60ace89f00013641890&amp;product=inline-share-buttons" defer></script></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/blog/2024/03/08/Linux/LVS/LVS%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%99%A8%E6%90%AD%E5%BB%BA/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">LVS 负载均衡器搭建</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/blog/2024/03/08/Linux/VMWare%20Player%20%E5%AE%89%E8%A3%85Centos%207/"><span class="level-item">VMWare Player 安装Centos 7</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar" src="/blog/img/avatar.png" alt="cocoadel"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">cocoadel</p><p class="is-size-6 is-block">Web Developer</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>Earth, Solar System</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><a href="/blog/archives"><p class="title">17</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><a href="/blog/categories"><p class="title">2</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><a href="/blog/tags"><p class="title">4</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/cocoZwwang" target="_blank" rel="noopener">关注我</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/cocoZwwang"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/blog/"><i class="fas fa-rss"></i></a></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#关键词"><span class="level-left"><span class="level-item">1</span><span class="level-item">关键词</span></span></a></li><li><a class="level is-mobile" href="#LVS-工作模式"><span class="level-left"><span class="level-item">2</span><span class="level-item">LVS 工作模式</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#LVS-NAT"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">LVS-NAT</span></span></a></li><li><a class="level is-mobile" href="#LVS-DR"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">LVS-DR</span></span></a></li></ul></li><li><a class="level is-mobile" href="#LVS-组件"><span class="level-left"><span class="level-item">3</span><span class="level-item">LVS 组件</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#ipvs"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">ipvs</span></span></a></li><li><a class="level is-mobile" href="#ipvsadm"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">ipvsadm</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#管理-Director-Server"><span class="level-left"><span class="level-item">3.2.1</span><span class="level-item">管理 Director Server</span></span></a></li><li><a class="level is-mobile" href="#管理-Real-Server："><span class="level-left"><span class="level-item">3.2.2</span><span class="level-item">管理 Real Server：</span></span></a></li><li><a class="level is-mobile" href="#查看和清空"><span class="level-left"><span class="level-item">3.2.3</span><span class="level-item">查看和清空</span></span></a></li><li><a class="level is-mobile" href="#保存和恢复"><span class="level-left"><span class="level-item">3.2.4</span><span class="level-item">保存和恢复</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#参考资料"><span class="level-left"><span class="level-item">4</span><span class="level-item">参考资料</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/blog/js/toc.js" defer></script></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">链接</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Hexo</span></span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://bulma.io" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Bulma</span></span><span class="level-right"><span class="level-item tag">bulma.io</span></span></a></li></ul></div></div></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">分类</h3><ul class="menu-list"><li><a class="level is-mobile" href="/blog/categories/Mysql/"><span class="level-start"><span class="level-item">Mysql</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/blog/categories/%E7%AE%97%E6%B3%95/"><span class="level-start"><span class="level-item">算法</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></div></div></div><div class="column-right-shadow is-hidden-widescreen"></div></div><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only order-3"><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-03-08T03:43:42.000Z">2024-03-08</time></p><p class="title"><a href="/blog/2024/03/08/Linux/LVS/Keepalived%20+%20LVS-DR%20%E9%AB%98%E5%8F%AF%E7%94%A8%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%99%A8%E6%90%AD%E5%BB%BA/">Keepalived + LVS-DR 高可用负载均衡器搭建</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-03-08T03:43:29.000Z">2024-03-08</time></p><p class="title"><a href="/blog/2024/03/08/Linux/LVS/LVS%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%99%A8%E6%90%AD%E5%BB%BA/">LVS 负载均衡器搭建</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-03-08T03:43:19.000Z">2024-03-08</time></p><p class="title"><a href="/blog/2024/03/08/Linux/LVS/LVS-%E7%AE%80%E4%BB%8B/">LVS-简介</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-03-08T02:53:23.000Z">2024-03-08</time></p><p class="title"><a href="/blog/2024/03/08/Linux/VMWare%20Player%20%E5%AE%89%E8%A3%85Centos%207/">VMWare Player 安装Centos 7</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-03-08T01:28:24.000Z">2024-03-08</time></p><p class="title"><a href="/blog/2024/03/08/Mysql/Mysql%20%E5%AE%89%E8%A3%85%20-%20Centos%207%20%E5%8E%8B%E7%BC%A9%E5%8C%85%E5%AE%89%E8%A3%85/">Mysql 安装 - Centos 7 二进制包安装</a></p></div></article></div></div><div class="card widget" data-type="archives"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-mobile" href="/blog/archives/2024/03/"><span class="level-start"><span class="level-item">三月 2024</span></span><span class="level-end"><span class="level-item tag">12</span></span></a></li><li><a class="level is-mobile" href="/blog/archives/2024/02/"><span class="level-start"><span class="level-item">二月 2024</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></div></div></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/blog/tags/LVS/"><span class="tag">LVS</span><span class="tag">2</span></a></div><div class="control"><a class="tags has-addons" href="/blog/tags/Linux/"><span class="tag">Linux</span><span class="tag">2</span></a></div><div class="control"><a class="tags has-addons" href="/blog/tags/Load-Balancer/"><span class="tag">Load Balancer</span><span class="tag">2</span></a></div><div class="control"><a class="tags has-addons" href="/blog/tags/Mysql/"><span class="tag">Mysql</span><span class="tag">1</span></a></div></div></div></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/blog/"><img src="/blog/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2024 cocoZWWang</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Discuss on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus/discussions"><i class="fas fa-comments"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/blog/js/column.js"></script><script src="/blog/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/blog/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "此网站使用Cookie来改善您的体验。",
+          dismiss: "知道了！",
+          allow: "允许使用Cookie",
+          deny: "拒绝",
+          link: "了解更多",
+          policy: "Cookie政策",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><div id="outdated"><h6>Your browser is out-of-date!</h6><p>Update your browser to view this website correctly.&amp;npsb;<a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p><p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">×</a></p></div><script src="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.js" defer></script><script>window.addEventListener("load", function () {
+            outdatedBrowser({
+                bgColor: '#f25648',
+                color: '#ffffff',
+                lowerThan: 'object-fit' // display on IE11 or below
+            });
+        });</script><!--!--><!--!--><!--!--><script src="/blog/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/blog/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/blog/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

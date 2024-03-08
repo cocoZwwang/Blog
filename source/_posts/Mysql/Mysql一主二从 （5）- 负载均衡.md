@@ -12,9 +12,9 @@ toc: true
 
 # LVS 简介
 
-如果想了解 LVS/DR 的工作原理可以参考文章：《01 LVS-简介》
+如果想了解 LVS/DR 的工作原理可以参考文章：[《LVS-简介》](2024/03/03/Linux/LVS/LVS-简介)
 
-如果想了解如何基于 Keepalived 部署一个最小化的标准 LVS/DR 负载均衡集群，可以参考文章：《02 LVS 负载均衡器搭建》，《03 Keepalived + LVS-DR 高可用负载均衡器搭建》
+如果想了解如何基于 Keepalived 部署一个最小化的标准 LVS/DR 负载均衡集群，可以参考文章：[《LVS 负载均衡器搭建》](2024/03/04/Linux/LVS/LVS%20负载均衡器搭建)，[《Keepalived + LVS-DR 高可用负载均衡器搭建》](2024/03/05/Linux/LVS/Keepalived%20+%20LVS-DR%20高可用负载均衡器搭建)
 
 # 部署 Keepalived + LVS/DR 的主备负载均衡集群
 
@@ -22,7 +22,7 @@ toc: true
 
 ![图 1](1_master_2_slave_deploy.png)
 
-这里无法直接套用文章《03 Keepalived + LVS-DR 高可用负载均衡器搭建》中的配置，因为上述图中只有三台机器，因此一个节点上会同时存在 Director Server 和 Real Server，这种情况下需要解决一个额外的问题：
+这里无法直接套用文章[《Keepalived + LVS-DR 高可用负载均衡器搭建》](2024/03/05/Linux/LVS/Keepalived%20+%20LVS-DR%20高可用负载均衡器搭建)中的配置，因为上述图中只有三台机器，因此一个节点上会同时存在 Director Server 和 Real Server，这种情况下需要解决一个额外的问题：
 
 - LVS 备用节点存在 IPVS 规则时会产生流量转发的死循环问题。
 

@@ -8,12 +8,12 @@ toc: true
 ---
 
 
-上一章 {% post_link "Mysql 一主二从（1）- 架构描述" "《Mysql 一主二从（1）- 架构描述》" %}中，给出了架构的实现和部署图，这一章将描述如何通过虚拟机构建实验的基础环境：创建三个节点，并同时配置节点之间的 SSH 免密登录。
+上一章 [《Mysql 一主二从（1）- 架构描述》](2024/03/07/Mysql/Mysql%20一主二从（1）-%20架构描述)中，给出了架构的实现和部署图，这一章将描述如何通过虚拟机构建实验的基础环境：创建三个节点，并同时配置节点之间的 SSH 免密登录。
 <!--more-->
 
 # 创建虚拟机节点
 
-参考文章{% post_link "VMWare Player 安装Centos 7" "《VMWare Player 安装Centos 7》" %}创建三个虚拟机节点：
+参考文章[《VMWare Player 安装Centos 7》](2024/02/27/Linux/VMWare%20Player%20安装Centos%207/)创建三个虚拟机节点：
 
 - 操作系统：CentOS 7 
 - 主机名称：node1，node2，node3

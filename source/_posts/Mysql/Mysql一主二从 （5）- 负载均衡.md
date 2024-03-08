@@ -6,9 +6,7 @@ categories: Mysql
 thumbnail:
 toc: true
 ---
-
-- LVS 简介
-- Keepalived  + LVS/DR 的主备负载均衡集群
+对于大公司来说往往都有着专门的负载均衡服务器，但是对于一些小规模的项目来说“一锅炖”也是常有的事情，接下来本文将描述如果在两台真实服务器上，基于 Keepalived + LVS/DR 搭建一个高可用的负载均衡器。
 
 <!--more-->
 
@@ -24,7 +22,7 @@ toc: true
 
 ![图 1](1_master_2_slave_deploy.png)
 
-这里无法直接套用文章《》中的配置，因为上述图中只有三台机器，因此一个节点上会同时存在 Director Server 和 Real Server，这种情况下需要解决一个额外的问题：
+这里无法直接套用文章《03 Keepalived + LVS-DR 高可用负载均衡器搭建》中的配置，因为上述图中只有三台机器，因此一个节点上会同时存在 Director Server 和 Real Server，这种情况下需要解决一个额外的问题：
 
 - LVS 备用节点存在 IPVS 规则时会产生流量转发的死循环问题。
 
@@ -400,4 +398,8 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +---------------+-------+
 {% endcodeblock %}
 
+# 参考资料
 
+[LVS 官方文档](http://www.linuxvirtualserver.org/Documents.html)
+[LVS-HOWTO](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/index.html)
+[Keepalived用户指南](https://keepalived-doc.readthedocs.io/zh-cn/latest/index.html)

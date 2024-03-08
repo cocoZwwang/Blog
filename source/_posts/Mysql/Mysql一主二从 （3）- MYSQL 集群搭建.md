@@ -7,16 +7,13 @@ thumbnail:
 toc: true
 ---
 
-- 安装 MYSQL
-- 配置主从
-  - 双 1 设置
-  - 开启 GTID 复制
-  - 开启增强半同步复制
-- 开启主从复制
-
+本文将描述如何从零开始搭建一个一主二从的 MYSQL 集群，该集群通过以下特性来满足第一章 {% post_link "Mysql 一主二从（1）- 架构描述" "《Mysql 一主二从（1）- 架构描述》" %} 中提出的需求：
+- 双一配置：保证业务请求已经正确返回的数据一定被写入硬盘。
+- 增强半同步复制：同时保证集群中任何时候都至少有两个节点拥有完整的数据集。
+- GTID 复制：故障转移和恢复变得更加安全，方便，快速。
 <!--more-->
 
-## 安装 MYSQL
+# 安装 MYSQL
 
 分别在 node1，node2 和 node3 上安装 MYSQL
 
@@ -24,7 +21,7 @@ toc: true
 - 压缩包安装参考《Mysql 安装 - Centos 7 压缩包安装》
 - 脚本自动安装参考《Centos7 压缩包安装脚本》
 
-## 关闭防火墙
+# 关闭防火墙
 
 在每个节点上分别执行：
 
@@ -33,11 +30,11 @@ toc: true
 [root@localhost bin]# systemctl disable firewalld
 ```
 
-## 配置主从
+# 配置主从
 
 > 注意：下面以 node1 为例，每个节点都需要同样配置一次
 
-### 双 1 设置
+## 双 1 设置
 
 确认 `/etc/my.cnf` 中下列参数的配置：
 
@@ -49,7 +46,7 @@ sync_binlog=1
 innodb_flush_log_at_trx_commit=1 
 ```
 
-### 开启 GTID 复制
+## 开启 GTID 复制
 
 删除 $datadir/auto.cnf
 
@@ -116,7 +113,7 @@ root@localhost (none) :47: >show variables like '%gtid%';
 root@localhost (none) :47: >
 {% endcodeblock %}
 
-### 使用增强半同步模式
+## 使用增强半同步模式
 
 1. 判断 Mysql 服务是否支持动态增加插件：
 
@@ -195,12 +192,12 @@ rpl_semi_sync_master_enabled=ON
 rpl_semi_sync_master_timeout=10000
 ```
 
-## 开启主从 
+# 开启主从 
 
 - Master：node1
 - Slave：node2，node3
 
-### 创建复制账号
+## 创建复制账号
 
 在 **Master** 节点上创建复制账号
 
@@ -214,7 +211,7 @@ grant replication slave,replication client on *.* to 'repluser'@'192.168.3.%';
 
 > 如果要在同步复制中使用  `caching_sha2_password`认证，可以参考[官方文档](https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html)
 
-### 启动复制
+## 启动复制
 
 > 两个 slave 节点分别执行相同的操作
 
@@ -262,7 +259,7 @@ root@localhost (none) :06: >select user from mysql.user;
 5 rows in set (0.00 sec)
 {% endcodeblock %}
 
-### 设置 Master 为可写状态
+## 设置 Master 为可写状态
 
 ```shell
 root@localhost (none) :05: >set global read_only=off;

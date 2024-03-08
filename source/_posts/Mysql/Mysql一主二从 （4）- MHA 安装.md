@@ -7,21 +7,15 @@ thumbnail:
 toc: true
 ---
 
-- MHA 简介
-- 安装 和 配置 MHA
-- 验证故障转移
+MHA 目前在 MYSQL 高可用方面是一个相对成熟的解决方案，是一套在 MYSQL 高可用性环境下进行故障切换和主从提升的优秀软件。在 MYSQL 故障切换的过程中，最大程度地保证数据的完整性和一致性，以达到真正意义上的高可用。接下来本文将描述如何使用 MHA 来搭建一个一主二从的 MYSQL 集群。
 
 <!--more-->
 
-## MHA 简介
-
-MHA 目前在 MYSQL 高可用方面是一个相对成熟的解决方案，是一套在 MYSQL 高可用性环境下进行故障切换和主从提升的优秀软件。在 MYSQL 故障切换的过程中，最大程度地保证数据的完整性和一致性，以达到真正意义上的高可用。
-
-### 工作原理
+# 工作原理
 
 ![图 1](mha_arch.png)
 
-#### 传统复制：
+## 传统复制：
 
 1. 从宕机崩溃的 Master 保存二进制日记事件（BINLOG event）。
 2. 识别含有最新更新的 slave。
@@ -30,14 +24,14 @@ MHA 目前在 MYSQL 高可用方面是一个相对成熟的解决方案，是一
 5. 提升一个 Slave 为新的 Master。
 6. 使其他 Slave 连接到新的 Master 进行复制。
 
-#### GTID 复制模式：
+## GTID 复制模式：
 
 1. 识别含有最新更新的 Slave。
 2. 复制差异的 BINLOG 数据到其他 Slave。
 3. 提升一个 Slave 为新的 Master。
 4. 使其他 Slave 连接到新的 Master 进行复制。
 
-### 组件
+# 组件
 
 {% codeblock "MHA Manager" lang: >folded %}
 masterha_check_ssh：MHA SSH 免密通信环境检测工具
@@ -67,13 +61,13 @@ init_conf_load_script：加载初始配置参数。
 master_ip_online_change_script：更新 master 节点 ip 地址。
 {% endcodeblock %}
 
-### 使用要点
+## 使用要点
 
 - MHA Manager 可以单独部署在一台服务器，可以同时管理多个  MYSQL  集群。
 - MHA Manager 也可以部署在其中一台**从节点**上，但是不能在**主节点**上，否则一尸两命。
 - MHA Manager 在进行故障转移后，会停止自身进程，需要运维人员再次启动，如果 MHA Manager 节点被提升为主节点，需要在其他从节点启动 MHA Manager。
 
-### MHA Manager 高可用
+## MHA Manager 高可用
 
 MHA 目前不支持多个 Manager 同时监控一个 MYSQL 主从集群，因此，如果 MHA Manager 宕机，就无法启动主节点的故障转移。但是，MHA Manager 本身不参与业务，因此其单点故障的潜在威胁比较低，唯一需要避免的就是主节点和 MHA Manager 同时宕机。
 
@@ -83,12 +77,11 @@ MHA 目前不支持多个 Manager 同时监控一个 MYSQL 主从集群，因此
 
 - 可以选择使用 Pacemaker 等常见的主/备作为其高可用方案。
 
-## 安装 MHA 
+# 安装 MHA 
 
-### 安装 MHA Node
+## 安装 MHA Node
 
 > 注意：每个节点都需要安装 MHA Node，包括 MHA Manager
-
 
 {% codeblock "1. 安装 epel 源" lang:shell >folded %}
 [root@node4 ~]# yum install -y epel-release
@@ -110,10 +103,9 @@ MHA 目前不支持多个 Manager 同时监控一个 MYSQL 主从集群，因此
 {% endcodeblock %}
 
 
-### 安装 MHA Manager
+## 安装 MHA Manager
 
-####  配置主库
-
+###  配置主库
 
 {% codeblock "1. 在主节点（node1）上创建 mha 的监测账号" lang:sql >folded %}
 # MHA 默认使用 mysql_native_password 认证方式
@@ -126,7 +118,6 @@ Query OK, 0 rows affected (0.01 sec)
 root@localhost (none) :40: >grant all privileges on *.* to 'mhauser'@'192.168.3.%';
 Query OK, 0 rows affected (0.01 sec)
 {% endcodeblock %}
-
 
 
 {% codeblock "2. 检测账号是否同步完毕" lang:sql >folded %}
@@ -166,7 +157,7 @@ Enter password:
        valid_lft forever preferred_lft forever
    {% endcodeblock %}
 
-#### 配置 MHA Manager 节点
+### 配置 MHA Manager 节点
 
 > 我们选择从节点 node3 部署 MHA Manager
 
@@ -370,8 +361,6 @@ candidate_master=1
 
 ### 启动 MHA Manager
 
-
-
 {% codeblock "1. 检测集群 SSH 互通状态" lang:shell >folded %}
 [root@node3 ~]# masterha_check_ssh --conf=/etc/masterha/app1.cnf
 Thu Feb 29 18:33:15 2024 - [warning] Global configuration file /etc/masterha_default.cnf not found. Skipping.
@@ -444,15 +433,11 @@ Thu Feb 29 19:39:19 2024 - [info] Got exit code 0 (Not master dead).
 MySQL Replication Health is OK.
 {% endcodeblock %}
 
-
-
 {% codeblock "3. 启动" lang:shell >folded %}
 [root@node3 ~]# nohup masterha_manager --conf=/etc/masterha/app1.cnf --ignore_last_failove < /dev/null >/data/masterha/app1/manager.log 2>&1 &
 [1] 15176
 [root@node3 ~]#
 {% endcodeblock %}
-
-
 
 {% codeblock "4. 查看启动状态" lang:shell >folded %}
 [root@node3 ~]# tail -f /data/masterha/app1/manager.log
@@ -498,9 +483,7 @@ Fri Mar  1 01:42:37 2024 - [info] Starting ping health check on node1(192.168.3.
 Fri Mar  1 01:42:37 2024 - [info] Ping(CONNECT) succeeded, waiting until MySQL doesn't respond..
 {% endcodeblock %}
 
-### 模拟故障转移
-
-
+# 模拟故障转移
 
 {% codeblock "1. 在 windows 主机通过浮动 IP 登录并查看 server_id" lang:cmd >folded %}
 D:\Works\mysql-8.0.15-winx64\bin>mysql -umhauser -p -h 192.168.3.200 -e "select @@server_id;"
@@ -511,8 +494,6 @@ Enter password: *******
 |           1 |
 +-------------+
 {% endcodeblock %}
-
-
 
 {% codeblock "2. 停掉当前主节点（node1）上的 MYSQL 实例" lang:shll >folded %}
 # 停止 mysql 实例
@@ -536,7 +517,6 @@ Enter password: *******
        valid_lft forever preferred_lft forever
 [root@localhost tmp]#
 {% endcodeblock %}
-
 
 
 {% codeblock "3. 再次在 windows 主机通过浮动 IP 登录并查看 server_id" lang:cmd >folded %}
@@ -569,11 +549,11 @@ root@localhost (none) :58: >show slave status\G
 
 MHA Manager 故障转移成功，并且整个过程对于 Client 端都是透明的。
 
-### 模拟故障恢复
+# 模拟故障恢复
 
 下面再用一个简单的情景模拟一下 MHA 故障转移和故障恢复，已经其是否能保障数据的完整性。
 
-#### 故障转移：
+## 故障转移：
 
 
 {% codeblock "1. 在主节点创建一张 student 表 " lang:shell >folded %}
@@ -680,7 +660,7 @@ Enter password:
 +----------+
 {% endcodeblock %}
 
-#### 故障回复：
+## 故障回复：
 
 {% codeblock "1. 重新启动 node1" lang:sql >folded %}
 ```shell
@@ -770,7 +750,7 @@ MySQL Replication Health is OK.
 [root@node3 ~]#
 {% endcodeblock %}
 
-## 参考资料
+# 参考资料
 
 《深入浅出 MYSQL》
 
